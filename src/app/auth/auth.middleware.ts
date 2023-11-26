@@ -2,12 +2,12 @@ import { Logger, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import * as cookie from 'cookie';
 import { ITokenPayload } from 'jsonwebtoken';
-import { JwtService } from 'src/utils/jwt/jwt.service';
+import { JwtExpiry, JwtService } from '../../utils/jwt/jwt.service';
 import { UserService } from '../user/user.service';
 import { UserStatus } from '../user/entity/user.entity';
-import { RedisPrefix, RedisService } from 'src/redis/redis.service';
+import { RedisPrefix, RedisService } from '../../redis/redis.service';
 
-enum AuthStatus {
+export enum AuthStatus {
   NONE = 'NONE',
   AUTHENTICATED = 'AUTHENTICATED',
   MISSING_TOKEN = ' MISSING_TOKEN',
@@ -151,8 +151,30 @@ export class AuthMiddleware implements NestMiddleware {
       return next();
     }
 
+    const newAuthToken = this.jwtService.createAuthToken(userId);
+    const newRefreshToken = this.jwtService.createRefreshToken(authToken);
+    await this.redisService.set(
+      RedisPrefix.RefreshToken,
+      userId,
+      newRefreshToken,
+    );
+    res.setHeader('Set-Cookie', [
+      cookie.serialize('authToken', newAuthToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: true,
+        maxAge: JwtExpiry.AUTH_TOKEN_EXPIRY,
+      }),
+      cookie.serialize('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+        secure: true,
+        maxAge: JwtExpiry.REFRESH_TOKEN_EXPIRY,
+      }),
+    ]);
+
     req.authContext = {
-      userId: undefined,
+      userId: userId,
       authStatus: AuthStatus.AUTHENTICATED,
       message: 'authenticated',
       setNewTokens: true,
