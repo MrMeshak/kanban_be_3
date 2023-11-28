@@ -1,4 +1,4 @@
-import { Entity, Enum, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, Enum, PrimaryKey, Property, Unique } from '@mikro-orm/core';
 
 export enum UserStatus {
   ACTIVE = 'ACTIVE',
@@ -11,6 +11,7 @@ export class User {
   id: string;
 
   @Property()
+  @Unique()
   email: string;
 
   @Property()

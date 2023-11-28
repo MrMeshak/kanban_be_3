@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import jwt, { ITokenPayload } from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
+import { ITokenPayload } from 'jsonwebtoken';
 
 declare module 'jsonwebtoken' {
   export interface ITokenPayload extends jwt.JwtPayload {
