@@ -75,5 +75,9 @@ export class AuthController {
   }
 
   @Post('/logout')
-  logout(@Res() res: Response) {}
+  logout(@Res() res: Response) {
+    res.clearCookie('authToken');
+    res.clearCookie('refreshToken');
+    res.status(HttpStatus.NO_CONTENT).send();
+  }
 }
