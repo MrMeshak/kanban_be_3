@@ -1,30 +1,37 @@
 import * as cookie from 'cookie';
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   HttpException,
   HttpStatus,
   Post,
   Res,
+  UseInterceptors,
 } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
-import { AuthService, InvalidCredentialsError } from './auth.service';
+import { AuthService } from './auth.service';
 import { Response } from 'express';
 import { JwtExpiry } from 'src/utils/jwt/jwt.service';
+import {
+  AlreadyExistsError,
+  InvalidCredentialsError,
+} from 'src/utils/base/errors';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
+  @Post('/login')
   async login(
     @Body() data: LoginDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    console.log(data);
     try {
-      const { authToken, refreshToken } = await this.authService.login(data);
+      const { user, authToken, refreshToken } = await this.authService.login(
+        data,
+      );
       res.setHeader('Set-Cookie', [
         cookie.serialize('authToken', authToken, {
           httpOnly: true,
@@ -40,14 +47,33 @@ export class AuthController {
         }),
       ]);
 
-      return { data, status: HttpStatus.OK };
+      res.status(HttpStatus.OK);
+      return user;
     } catch (err) {
       if (err instanceof InvalidCredentialsError) {
-        throw new HttpException(err.message, HttpStatus.UNAUTHORIZED);
+        throw new HttpException(err.message, HttpStatus.UNAUTHORIZED, {
+          cause: err,
+        });
       }
     }
   }
 
-  @Post('signup')
-  signup(data: SignupDto) {}
+  @Post('/signup')
+  async signup(@Body() data: SignupDto) {
+    try {
+      const user = await this.authService.signup(data);
+      console.log(user);
+      return user;
+    } catch (err) {
+      if (err instanceof AlreadyExistsError) {
+        throw new HttpException(err.message, HttpStatus.CONFLICT, {
+          cause: err,
+        });
+      }
+      console.log(err);
+    }
+  }
+
+  @Post('/logout')
+  logout(@Res() res: Response) {}
 }

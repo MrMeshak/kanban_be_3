@@ -5,6 +5,8 @@ import { UserService } from '../user/user.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from 'src/utils/jwt/jwt.service';
 import { RedisPrefix, RedisService } from 'src/redis/redis.service';
+import { InvalidCredentialsError } from 'src/utils/base/errors';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -33,18 +35,16 @@ export class AuthService {
       user.id,
       refreshToken,
     );
-
+    console.log(user);
     return {
+      user,
       authToken,
       refreshToken,
     };
   }
 
-  signup(data: SignupDto) {}
-}
-
-export class InvalidCredentialsError extends Error {
-  constructor(message: string) {
-    super(message);
+  async signup(data: SignupDto) {
+    const user = await this.userService.createUser(data);
+    return user;
   }
 }
