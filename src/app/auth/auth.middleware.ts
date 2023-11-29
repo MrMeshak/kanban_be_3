@@ -52,6 +52,7 @@ export class AuthMiddleware implements NestMiddleware {
     const cookies = cookie.parse(req.headers.cookie ?? '');
     const authToken: string = cookies['authToken'];
     const refreshToken: string = cookies['refreshToken'];
+    this.logger.log('authToken', authToken);
 
     if (!authToken || !refreshToken) {
       req.authContext = {
@@ -69,7 +70,6 @@ export class AuthMiddleware implements NestMiddleware {
         ignoreExpiration: true,
       });
     } catch (err) {
-      this.logger.log(err);
       req.authContext = {
         userId: undefined,
         authStatus: AuthStatus.INVALID_AUTH_TOKEN,

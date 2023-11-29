@@ -1,4 +1,4 @@
-import { Entity, Enum, PrimaryKey, Property } from '@mikro-orm/core';
+import { Entity, Enum, PrimaryKey, Property, Unique } from '@mikro-orm/core';
 
 export enum UserStatus {
   ACTIVE = 'ACTIVE',
@@ -11,9 +11,10 @@ export class User {
   id: string;
 
   @Property()
+  @Unique()
   email: string;
 
-  @Property()
+  @Property({ hidden: true })
   password: string;
 
   @Property()
@@ -22,12 +23,14 @@ export class User {
   @Property()
   lastName: string;
 
+  @Property({ hidden: true })
   @Enum(() => UserStatus)
   userStatus: UserStatus;
 
-  @Property()
+  @Property({ hidden: true })
   createdAt: Date = new Date();
 
+  @Property({ hidden: true })
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 }
