@@ -19,13 +19,13 @@ export class AuthService {
     const user = await this.userService.findUserByEmail(data.email);
 
     if (!user) {
-      throw new InvalidCredentialsError('Email or Password are invalid');
+      throw new InvalidCredentialsError('Invalid credentials');
     }
 
     const match = await bcrypt.compare(data.password, user.password);
 
     if (!match) {
-      throw new InvalidCredentialsError('Email or Password are invalid');
+      throw new InvalidCredentialsError('Invalid credentials');
     }
 
     const authToken = this.jwtService.createAuthToken(user.id);
@@ -44,7 +44,10 @@ export class AuthService {
   }
 
   async signup(data: SignupDto) {
-    const user = await this.userService.createUser(data);
-    return user;
+    return await this.userService.createUser(data);
+  }
+
+  async me(userId: string) {
+    return await this.userService.findUserById(userId);
   }
 }

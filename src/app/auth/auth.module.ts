@@ -6,7 +6,7 @@ import { RedisModule } from '../../redis/redis.module';
 import { JwtModule } from '../../utils/jwt/jwt.module';
 
 @Module({
-  imports: [AuthModule, JwtModule, RedisModule, UserModule],
+  imports: [JwtModule, RedisModule, UserModule],
   controllers: [AuthController],
   providers: [AuthService],
 })

@@ -1,4 +1,4 @@
-import { Logger, NestMiddleware } from '@nestjs/common';
+import { Injectable, Logger, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import * as cookie from 'cookie';
 import { ITokenPayload } from 'jsonwebtoken';
@@ -30,6 +30,7 @@ export interface RequestWithAuthContext extends Request {
   authContext: AuthContext;
 }
 
+@Injectable()
 export class AuthMiddleware implements NestMiddleware {
   private readonly logger = new Logger(AuthMiddleware.name);
 
@@ -52,7 +53,7 @@ export class AuthMiddleware implements NestMiddleware {
     const cookies = cookie.parse(req.headers.cookie ?? '');
     const authToken: string = cookies['authToken'];
     const refreshToken: string = cookies['refreshToken'];
-    this.logger.log('authToken', authToken);
+    this.logger.log('authToken: ' + authToken);
 
     if (!authToken || !refreshToken) {
       req.authContext = {
@@ -69,7 +70,8 @@ export class AuthMiddleware implements NestMiddleware {
       decodedAuthToken = this.jwtService.verifyAuthToken(authToken, {
         ignoreExpiration: true,
       });
-    } catch (err) {
+    } catch (error) {
+      console.log(error);
       req.authContext = {
         userId: undefined,
         authStatus: AuthStatus.INVALID_AUTH_TOKEN,
@@ -93,7 +95,7 @@ export class AuthMiddleware implements NestMiddleware {
     let decodedRefreshToken: ITokenPayload;
     try {
       decodedRefreshToken = this.jwtService.verifyRefreshToken(refreshToken);
-    } catch (err) {
+    } catch (error) {
       req.authContext = {
         userId: undefined,
         authStatus: AuthStatus.INVALID_REFRESH_TOKEN,

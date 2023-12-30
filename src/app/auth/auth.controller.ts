@@ -1,13 +1,15 @@
 import * as cookie from 'cookie';
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
+  NotFoundException,
   Post,
+  Req,
   Res,
-  UseInterceptors,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
@@ -17,7 +19,9 @@ import { JwtExpiry } from 'src/utils/jwt/jwt.service';
 import {
   AlreadyExistsError,
   InvalidCredentialsError,
+  NotFoundError,
 } from 'src/utils/base/errors';
+import { RequestWithAuthContext } from './auth.middleware';
 
 @Controller('auth')
 export class AuthController {
@@ -79,5 +83,19 @@ export class AuthController {
     res.clearCookie('authToken');
     res.clearCookie('refreshToken');
     res.status(HttpStatus.NO_CONTENT).send();
+  }
+
+  @Get('/me')
+  async me(@Req() req: RequestWithAuthContext) {
+    const { userId } = req.authContext;
+    console.log(req.authContext);
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    const user = this.authService.me(userId);
+    if (!user) {
+      throw new NotFoundException('User could not be found');
+    }
+    return user;
   }
 }
