@@ -4,21 +4,25 @@ import { Injectable } from '@nestjs/common';
 import { User, UserStatus } from './entity/user.entity';
 import { EntityRepository } from '@mikro-orm/mysql';
 import { SignupDto } from '../auth/dto/signup.dto';
-import { AlreadyExistsError } from 'src/utils/base/errors';
+import { AlreadyExistsError, NotFoundError } from 'src/utils/base/errors';
 import { plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
+import { CreateRequestContext, MikroORM } from '@mikro-orm/core';
 
 @Injectable()
 export class UserService {
   constructor(
+    private readonly orm: MikroORM,
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
   ) {}
 
+  @CreateRequestContext()
   async findUserById(userId: string): Promise<User | null> {
     return await this.userRepository.findOne({ id: userId });
   }
 
+  @CreateRequestContext()
   async findUserByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({ email: email });
   }
